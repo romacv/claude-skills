@@ -30,9 +30,52 @@ Core stance: push every cross-cutting concern to **one seam**, modularize **for 
 - **Modularize for the compiler, not the file browser:** split into many small SPM library targets layered by dependency direction (Foundation → Services → UI → Features), each with its own `Sources/` + `Tests/`. Folder-only "modules" inside one target enforce nothing.
 - **Adopt Swift 6 strict concurrency incrementally:** opt in per target (shared `swiftSettings` + upcoming-feature flags) and migrate module-by-module, not the whole app at once — keep adoption visible and reversible per module.
 - **One seam per cross-cutting concern — change once, propagate everywhere:**
-  - *Platform types:* one type-alias file maps per-OS types (`NSColor`/`UIColor`, `NSView`/`UIView`, …) to shared aliases, so cross-platform code is written once against the alias — a single `#if os()` there replaces thousands at call sites.
+  - *Platform types:* one type-alias file maps per-OS types to shared aliases. Example:
+    ```swift
+    #if os(macOS)
+    import AppKit
+    public typealias PlatformColor = NSColor
+    public typealias PlatformView = NSView
+    public typealias PlatformViewController = NSViewController
+    public typealias PlatformImage = NSImage
+    #elseif os(iOS)
+    import UIKit
+    public typealias PlatformColor = UIColor
+    public typealias PlatformView = UIView
+    public typealias PlatformViewController = UIViewController
+    public typealias PlatformImage = UIImage
+    #endif
+    ```
   - *Design tokens:* one file of semantic color/font/icon tokens, each resolving its light/dark + per-platform value **inside** the token — never a hardcoded value at the call site.
-  - *Dependency injection:* a lightweight, compile-time-checked DI (e.g. keyPath property-wrapper injection with explicit singleton vs factory scopes and a test-override scope) — not a stringly-typed registry or a heavy framework. Inject protocols / composed existentials (`any A & B`), never concretes.
+  - *Dependency injection:* a lightweight, compile-time-checked DI using keyPaths (e.g., `@Injected(\.service)`). Inject protocols / composed existentials (`any Service`), never concretes. Example:
+    ```swift
+    public protocol DependencyKey {
+        associatedtype Value
+        static var currentValue: Value { get set }
+    }
+    public struct DependencyValues {
+        private static var current = DependencyValues()
+        public static subscript<K>(key: K.Type) -> K.Value where K: DependencyKey {
+            get { key.currentValue }
+            set { key.currentValue = newValue }
+        }
+        public static subscript<T>(_ keyPath: WritableKeyPath<DependencyValues, T>) -> T {
+            get { current[keyPath: keyPath] }
+            set { current[keyPath: keyPath] = newValue }
+        }
+    }
+    @propertyWrapper
+    public struct Injected<T> {
+        private let keyPath: WritableKeyPath<DependencyValues, T>
+        public var wrappedValue: T {
+            get { DependencyValues[keyPath] }
+            set { DependencyValues[keyPath] = newValue }
+        }
+        public init(_ keyPath: WritableKeyPath<DependencyValues, T>) {
+            self.keyPath = keyPath
+        }
+    }
+    ```
   - *Strings:* typed config (typed key + default) instead of raw `UserDefaults.standard.string(forKey:)`, and typed event factories instead of inline analytics strings.
 - **Make wrong states unrepresentable early:** trap on invalid config defaults at construction so they fail at launch / in tests, not in prod.
 - **Strict-concurrency escape hatches are audited exceptions, not defaults:** `@preconcurrency import` for legacy SDKs; `nonisolated(unsafe)` / `@unchecked Sendable` only where an invariant is hand-proven (a type that internally serializes access). Reach for an actor or an immutable `Sendable` value first.
@@ -64,7 +107,7 @@ Apple names: color `AppColor.*` · font `AppFont.*` · spacing/size `AppSpacing.
 - Recurring view recipe (2nd time) → a `ViewModifier` + `View` extension.
 
 ## Runtime
-- Verify to a **green build only** (+ existing fast Swift Testing unit tests) — do NOT launch/run the app, drive the simulator, capture screenshots, or use xcui / Axiom UI automation as a dev-loop step. Report build-green + a short what-to-test list, hand the running app to the maintainer for manual testing. Drive/capture the sim only when explicitly asked.
+- Verify to a **green build only** (+ existing fast Swift Testing unit tests) — do NOT launch/run the app, drive the simulator, capture screenshots, or use xcui / Axiom UI automation as a dev-loop step. Report build-green + a short what-to-test list, hand the running app to the maintainer for manual testing. Drive/capture the sim only when explicitly asks.
 - Call `session_set_defaults` before first build in a session.
 - Build target: latest booted simulator or nearest iPhone Pro with `useLatestOS true` (running/UI only on explicit request).
 - Reuse one simulator; kill stale simulators if more than three are running.
@@ -75,6 +118,23 @@ Apple names: color `AppColor.*` · font `AppFont.*` · spacing/size `AppSpacing.
   1. File-level guard: `#if os(macOS)` wraps the entire file — use for platform-exclusive features.
   2. `ViewModifier`: one modifier owns the `#if`; the call site contains no conditional — e.g. `.pageTabStyle(animating:)`.
   3. `View` extension: `func iOSOnly() -> some View` with the `#if` inside the extension body.
+- Conditional modifiers or extensions isolate the branches. Example:
+  ```swift
+  extension View {
+      @ViewBuilder
+      public func modifyForPlatform<T: View>(@ViewBuilder _ transform: (Self) -> T) -> some View {
+          transform(self)
+      }
+      
+      public func platformBackground(_ color: Color) -> some View {
+          #if os(macOS)
+          return self.background(color)
+          #else
+          return self.background(color.ignoresSafeArea())
+          #endif
+      }
+  }
+  ```
 - Never duplicate a modifier call block across two `#if` branches — factor the shared block out first.
 - A platform branch (`#if os()`, `#if canImport()`) that appears more than once → extract to a named modifier, extension, or type immediately.
 - Same logic in two branches = wrong abstraction level; fix it.
