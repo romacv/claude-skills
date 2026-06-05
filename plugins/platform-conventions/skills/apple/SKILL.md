@@ -1,6 +1,6 @@
 ---
 name: apple
-description: Use when writing, editing, or reviewing Apple-platform code — iOS, macOS, watchOS, Swift, SwiftUI, Xcode projects, or Apple frameworks (SwiftData, GRDB, CloudKit, Photos, Foundation Models, Liquid Glass).
+description: Use when writing, editing, or reviewing Apple-platform code — iOS, macOS, watchOS, Swift, SwiftUI, Xcode projects, or Apple frameworks (SwiftData, Core Data, GRDB, SQLite, CloudKit, Photos, Foundation Models, Liquid Glass).
 ---
 
 # Platform: Apple (iOS / macOS / watchOS)
@@ -14,10 +14,10 @@ An opinionated house style for Apple-platform code. Load alongside the public Ap
 
 ## Code
 - Language: Swift 6 strict concurrency throughout.
-- UI framework: SwiftUI only. No UIKit or AppKit unless bridging is unavoidable.
-- Async: async/await and AsyncSequence. No Combine.
+- UI framework: SwiftUI only.
+- Async: Swift Concurrency (async/await and AsyncSequence). Combine is legacy, do not write new code with it.
 - State: `@Observable` only. No `ObservableObject`, no `@Published`.
-- Persistence: SwiftData or GRDB. No Core Data.
+- Persistence: SwiftData, Core Data, GRDB, or SQLite.
 - Testing: Swift Testing framework. No XCTest unless the target requires it.
 - One type per file. No multiple View declarations in one file. No DTO dumps.
 - All public types must conform to `Sendable`.
