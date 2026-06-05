@@ -1,0 +1,18 @@
+{
+  "name": "claude-skills",
+  "description": "Opinionated cross-project platform conventions (house style) for Claude Code — Apple, backend, web frontend, Android/Flutter.",
+  "owner": {
+    "name": "romacv"
+  },
+  "plugins": [
+    {
+      "name": "platform-conventions",
+      "description": "Per-platform house-style conventions: Apple (Swift/SwiftUI), backend (Cloudflare Workers/Hono), web frontend (Next.js), Android/Flutter.",
+      "version": "0.1.0",
+      "source": "./plugins/platform-conventions",
+      "author": {
+        "name": "romacv"
+      }
+    }
+  ]
+}

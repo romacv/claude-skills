@@ -1,0 +1,8 @@
+{
+  "name": "platform-conventions",
+  "version": "0.1.0",
+  "description": "Per-platform house-style conventions: Apple (Swift/SwiftUI), backend (Cloudflare Workers/Hono), web frontend (Next.js), Android/Flutter.",
+  "author": {
+    "name": "romacv"
+  }
+}
