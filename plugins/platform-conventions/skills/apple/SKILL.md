@@ -23,6 +23,30 @@ An opinionated house style for Apple-platform code. Load alongside the public Ap
 - All public types must conform to `Sendable`.
 - Actors own all mutable shared state.
 
+## Simplify · adopt new · drop legacy
+Core stance: push every cross-cutting concern to **one seam**, modularize **for the compiler**, and treat Combine / `@escaping` completion handlers / `ObservableObject` / UIKit-for-new-screens / Core-Data-for-greenfield / XCTest as **legacy bridges to retire, not patterns to extend**. Keep what's load-bearing (a working CloudKit-synced store with tested migrations); modernize what's greenfield. Make wrong states fail at launch/in tests, never in prod.
+
+### DO
+- **Modularize for the compiler, not the file browser:** split into many small SPM library targets layered by dependency direction (Foundation → Services → UI → Features), each with its own `Sources/` + `Tests/`. Folder-only "modules" inside one target enforce nothing.
+- **Adopt Swift 6 strict concurrency incrementally:** opt in per target (shared `swiftSettings` + upcoming-feature flags) and migrate module-by-module, not the whole app at once — keep adoption visible and reversible per module.
+- **One seam per cross-cutting concern — change once, propagate everywhere:**
+  - *Platform types:* one type-alias file maps per-OS types (`NSColor`/`UIColor`, `NSView`/`UIView`, …) to shared aliases, so cross-platform code is written once against the alias — a single `#if os()` there replaces thousands at call sites.
+  - *Design tokens:* one file of semantic color/font/icon tokens, each resolving its light/dark + per-platform value **inside** the token — never a hardcoded value at the call site.
+  - *Dependency injection:* a lightweight, compile-time-checked DI (e.g. keyPath property-wrapper injection with explicit singleton vs factory scopes and a test-override scope) — not a stringly-typed registry or a heavy framework. Inject protocols / composed existentials (`any A & B`), never concretes.
+  - *Strings:* typed config (typed key + default) instead of raw `UserDefaults.standard.string(forKey:)`, and typed event factories instead of inline analytics strings.
+- **Make wrong states unrepresentable early:** trap on invalid config defaults at construction so they fail at launch / in tests, not in prod.
+- **Strict-concurrency escape hatches are audited exceptions, not defaults:** `@preconcurrency import` for legacy SDKs; `nonisolated(unsafe)` / `@unchecked Sendable` only where an invariant is hand-proven (a type that internally serializes access). Reach for an actor or an immutable `Sendable` value first.
+- **Migrations:** versioned models + a domain-split migration manager (one file per migrated concern) + dedicated migration tests against an in-memory/temp store.
+
+### DON'T → use instead
+- `ObservableObject` + `@Published` + `@StateObject` → `@Observable` macro + plain `@State`.
+- Combine for one-shot async or as an event bus (`AnyPublisher`, `Set<AnyCancellable>`) → `async/await`, `AsyncStream`/`AsyncSequence`, `Observation`.
+- `@escaping` completion handlers in new APIs → `async` funcs; bridge legacy callbacks with `withCheckedContinuation`.
+- UIKit/AppKit VC stacks, storyboards/nibs, manual Auto Layout for new screens → SwiftUI + `NavigationStack` (value-based routes); keep a VC router only as a legacy bridge.
+- Raw `#if os()` sprinkled through feature code → the platform-type-alias seam + `Shared`/`iOS`/`macOS` folder split.
+- New Core Data schemas → SwiftData (or GRDB for fine-grained SQL/perf). Keep Core Data + `NSPersistentCloudKitContainer` only where a synced store + migration history already exist — don't rewrite a working synced store for novelty.
+- New XCTest suites → Swift Testing (`@Suite`/`@Test`/`#expect`/`#require`, `.serialized`, `@MainActor`); migrate older suites opportunistically.
+
 ## Constants & configuration (no magic strings)
 A repeated string literal drifts silently; a value already in a config has two sources of truth; a hardcoded value blocks white-label reuse. So:
 - Identifiers used in 2+ places (CloudKit zone/record-type names, `UserDefaults` keys, notification names) → one `static let` in a single config type. Never a bare literal at the call site.
