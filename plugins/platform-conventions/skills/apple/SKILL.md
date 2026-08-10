@@ -6,10 +6,10 @@ description: Use when writing, editing, or reviewing Apple-platform code — iOS
 # Platform: Apple (iOS / macOS / watchOS)
 
 ## Overview
-An opinionated house style for Apple-platform code. Load alongside the public Apple stack — Axiom plugin (`axiom-*` skills · `/axiom:*` · `xclog`/`xcsym`/`xcui` CLI), XcodeBuildMCP/`xcodebuildmcp-cli`, sosumi MCP (Apple docs). These conventions are the judgment layer the public tooling does not carry.
+An opinionated house style for Apple-platform code. Load alongside the public Apple stack — Axiom plugin (`axiom-*` skills · `/axiom:*` · `xclog`/`xcsym`/`xcui` CLI), sosumi MCP (Apple docs). These conventions are the judgment layer the public tooling does not carry.
 
 ## Tools
-- Use Axiom skills and XcodeBuildMCP for all Apple platform work.
+- Use Axiom skills for all Apple platform work; drive simulators with `xcrun simctl`. Never install or use a build MCP — it sets its own build directory, which means a cold cache and a full rebuild every run.
 - NEVER use mobile-mcp for any Apple target.
 
 ## Code

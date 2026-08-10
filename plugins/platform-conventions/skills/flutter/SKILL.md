@@ -6,11 +6,11 @@ description: Use when writing, editing, or reviewing Flutter (Dart) cross-platfo
 # Platform: Flutter (Cross-platform)
 
 ## Overview
-An opinionated house style for Flutter. Load alongside the public stack — mobile-mcp (Android) / XcodeBuildMCP (Flutter iOS target). These conventions are the judgment layer the public tooling does not carry.
+An opinionated house style for Flutter. Load alongside the public stack — mobile-mcp (Android) / `xcrun simctl` (Flutter iOS target). These conventions are the judgment layer the public tooling does not carry.
 
 ## Tools
 - Android target: mobile-mcp.
-- iOS target: XcodeBuildMCP. Never use mobile-mcp for the iOS Flutter target.
+- iOS target: `xcrun simctl`. Never use mobile-mcp for the iOS Flutter target.
 - No CocoaPods. iOS dependencies via SPM only.
 
 ## Code
@@ -27,4 +27,4 @@ Flutter names: color `AppColors.*` · font `AppTextStyles.*` · spacing/size `Ap
 
 ## Runtime
 - Verify to a **green build** (+ existing fast unit tests), then hand the running app to the maintainer for manual testing — no autonomous app-run / UI automation as a dev-loop step.
-- Run/drive only on explicit request: Android — single visible emulator via mobile-mcp; iOS — single booted simulator via XcodeBuildMCP with `useLatestOS true`.
+- Run/drive only on explicit request: Android — single visible emulator via mobile-mcp; iOS — single booted simulator via `xcrun simctl`.

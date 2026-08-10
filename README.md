@@ -14,7 +14,7 @@ Per-domain `SKILL` files that load lazily (auto-matched by description) when a t
 | `android` | Android (Kotlin/Compose) |
 | `flutter` | Flutter (Dart/cross-platform) |
 
-These are the *judgment layer* on top of public tooling (Axiom, XcodeBuildMCP, the Cloudflare plugin, frontend-design, mobile-mcp) — naming, architecture, design-token and verification conventions the tooling itself does not enforce.
+These are the *judgment layer* on top of public tooling (Axiom, the Cloudflare plugin, frontend-design, mobile-mcp) — naming, architecture, design-token and verification conventions the tooling itself does not enforce.
 
 ## Install
 

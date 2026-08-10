@@ -10,7 +10,6 @@ An opinionated house style for native Android. Load alongside the public stack â
 
 ## Tools
 - Use mobile-mcp for all Android work.
-- Never use XcodeBuildMCP for Android targets.
 
 ## Code
 - Language: Kotlin only. No Java new code.
