@@ -1,5 +1,5 @@
 {
-  "name": "claude-skills",
+  "name": "romacv-claude-skills",
   "description": "Opinionated cross-project platform conventions (house style) for Claude Code — Apple, backend, web frontend, Android/Flutter.",
   "owner": {
     "name": "romacv"
